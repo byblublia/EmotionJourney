@@ -93,7 +93,32 @@ transition:transform 0.3s;
 }
 
 .bubble:hover{transform:scale(1.1);}
+.modal{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.4);
+display:none;
+align-items:center;
+justify-content:center;
+animation:fadeIn 0.3s ease;
+}
 
+@keyframes fadeIn{
+from{opacity:0;}
+to{opacity:1;}
+}
+
+.card{
+animation:popUp 0.3s ease;
+}
+
+@keyframes popUp{
+from{transform:scale(0.8);opacity:0;}
+to{transform:scale(1);opacity:1;}
+}
 /* MODAL */
 .modal{
 position:fixed;
@@ -347,6 +372,30 @@ el.onclick=()=>{
 selectedId=id;
 
 if(editMode){
+// MODE EDIT
+eJudul.value=note.judul;
+eIsi.value=note.isi;
+eLevel.value=note.level;
+eKategori.value=note.kategori;
+editModal.style.display="flex";
+}
+else{
+// MODE DETAIL AESTHETIC
+dJudul.innerText=note.judul;
+dTanggal.innerText="Tanggal: "+note.tanggal;
+dLevel.innerText="Level: "+note.level;
+dKategori.innerText="Kategori: "+note.kategori;
+dIsi.value=note.isi;
+
+detailCard.style.background=colors[note.level];
+detailModal.style.display="flex";
+}
+
+};
+
+selectedId=id;
+
+if(editMode){
 // buka edit
 eJudul.value=note.judul;
 eIsi.value=note.isi;
@@ -385,8 +434,13 @@ requestAnimationFrame(animate);
 
 loadNotes();
 animate();
+
+window.closeDetail=()=>{
+detailModal.style.display="none";
+};
 </script>
 
 </body>
 </html>
+
 
