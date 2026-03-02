@@ -13,6 +13,7 @@ body{
   background:linear-gradient(135deg,#dbeafe,#fce7f3);
 }
 
+/* HEADER */
 .header{
   position:fixed;
   top:20px;
@@ -21,17 +22,16 @@ body{
   text-align:center;
   z-index:10;
 }
-
 .header h1{
   margin:0;
-  font-size:28px;
-  letter-spacing:2px;
+  font-size:30px;
+  letter-spacing:3px;
 }
-
 .header button{
   margin-top:10px;
 }
 
+/* BUTTON */
 button{
   border:none;
   padding:8px 20px;
@@ -42,12 +42,12 @@ button{
   font-size:13px;
   transition:0.3s;
 }
-
 button:hover{
   background:#4f46e5;
   transform:scale(1.05);
 }
 
+/* BUBBLE */
 .bubble{
   position:absolute;
   border-radius:50%;
@@ -62,9 +62,11 @@ button:hover{
   box-shadow:0 15px 30px rgba(0,0,0,0.25);
   backdrop-filter:blur(8px);
   cursor:pointer;
+  opacity:0.75; /* transparan */
 }
 
-.modal{
+/* MODAL DETAIL */
+.detailModal{
   position:fixed;
   inset:0;
   background:rgba(0,0,0,0.4);
@@ -73,15 +75,35 @@ button:hover{
   align-items:center;
   z-index:20;
 }
+.detailCard{
+  width:350px;
+  padding:25px;
+  border-radius:20px;
+  color:white;
+  box-shadow:0 20px 50px rgba(0,0,0,0.3);
+  animation:fadeIn 0.3s ease;
+}
+@keyframes fadeIn{
+  from{transform:scale(0.8);opacity:0;}
+  to{transform:scale(1);opacity:1;}
+}
 
-.modal-content{
+/* FORM MODAL */
+.formModal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.4);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:30;
+}
+.formCard{
   background:white;
   padding:25px;
   border-radius:20px;
-  width:340px;
-  box-shadow:0 15px 40px rgba(0,0,0,0.3);
+  width:350px;
 }
-
 input,textarea,select{
   width:100%;
   margin-bottom:12px;
@@ -99,9 +121,23 @@ input,textarea,select{
   <button onclick="openAdd()">Tambah Catatan</button>
 </div>
 
-<div class="modal" id="modal">
-  <div class="modal-content">
-    <h3 id="modalTitle">Tambah Catatan</h3>
+<!-- DETAIL MODAL -->
+<div class="detailModal" id="detailModal">
+  <div class="detailCard" id="detailCard">
+    <h3 id="detailTitle"></h3>
+    <p id="detailDate"></p>
+    <p id="detailIsi"></p>
+    <br>
+    <button onclick="editNote()">Edit</button>
+    <button onclick="deleteNote()">Hapus</button>
+    <button onclick="closeDetail()">Tutup</button>
+  </div>
+</div>
+
+<!-- FORM MODAL -->
+<div class="formModal" id="formModal">
+  <div class="formCard">
+    <h3 id="formTitle">Tambah Catatan</h3>
     <input id="judul" placeholder="Judul">
     <textarea id="isi" placeholder="Isi"></textarea>
     <select id="level">
@@ -111,29 +147,28 @@ input,textarea,select{
       <option value="4">Sangat Berat</option>
     </select>
     <button onclick="saveNote()">Simpan</button>
-    <button onclick="closeModal()">Batal</button>
+    <button onclick="closeForm()">Batal</button>
   </div>
 </div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } 
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const PASSWORD="deadline";
 
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "emotion-74f3c.firebaseapp.com",
-  projectId: "emotion-74f3c",
-  storageBucket: "emotion-74f3c.firebasestorage.app",
-  messagingSenderId: "740825781548",
-  appId: "1:740825781548:web:90d4e448d440a953440889"
+const firebaseConfig={
+  apiKey:"ISI_API_KEY_KAMU",
+  authDomain:"emotion-74f3c.firebaseapp.com",
+  projectId:"emotion-74f3c",
+  storageBucket:"emotion-74f3c.firebasestorage.app",
+  messagingSenderId:"740825781548",
+  appId:"1:740825781548:web:90d4e448d440a953440889"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
 
 const colors={
 1:"linear-gradient(135deg,#60a5fa,#3b82f6)",
@@ -143,19 +178,20 @@ const colors={
 };
 
 let bubbles=[];
-let editingId=null;
+let currentId=null;
+let editing=false;
 
-/* PASSWORD ADD */
+/* OPEN ADD */
 window.openAdd=()=>{
-  const input=prompt("Masukkan password:");
-  if(input!==PASSWORD) return alert("Password salah!");
-  editingId=null;
-  document.getElementById("modalTitle").innerText="Tambah Catatan";
-  document.getElementById("modal").style.display="flex";
+  const pass=prompt("Masukkan password:");
+  if(pass!==PASSWORD) return alert("Password salah!");
+  editing=false;
+  document.getElementById("formTitle").innerText="Tambah Catatan";
+  document.getElementById("formModal").style.display="flex";
 }
 
-window.closeModal=()=>{
-  document.getElementById("modal").style.display="none";
+window.closeForm=()=>{
+  document.getElementById("formModal").style.display="none";
 }
 
 /* SAVE */
@@ -164,18 +200,15 @@ const judul=document.getElementById("judul").value;
 const isi=document.getElementById("isi").value;
 const level=parseInt(document.getElementById("level").value);
 
-if(!judul||!isi) return alert("Lengkapi data");
-
-if(editingId){
-  await updateDoc(doc(db,"notes",editingId),{judul,isi,level});
+if(editing){
+  await updateDoc(doc(db,"notes",currentId),{judul,isi,level});
 }else{
   await addDoc(collection(db,"notes"),{
     judul,isi,level,
     date:new Date().toLocaleDateString("id-ID")
   });
 }
-
-closeModal();
+closeForm();
 loadNotes();
 };
 
@@ -183,7 +216,6 @@ loadNotes();
 async function loadNotes(){
 bubbles.forEach(b=>b.el.remove());
 bubbles=[];
-
 const snap=await getDocs(collection(db,"notes"));
 snap.forEach(d=>createBubble(d.data(),d.id));
 }
@@ -196,7 +228,7 @@ el.className="bubble";
 el.style.width=size+"px";
 el.style.height=size+"px";
 el.style.background=colors[note.level];
-el.innerHTML=`<div><b>${note.judul}</b></div>`;
+el.innerHTML=`<b>${note.judul}</b>`;
 document.body.appendChild(el);
 
 const bubble={
@@ -211,35 +243,39 @@ size
 el.style.left=bubble.x+"px";
 el.style.top=bubble.y+"px";
 
-/* CLICK */
 el.addEventListener("click",()=>{
-  const action=confirm(
-  "Tanggal: "+note.date+
-  "\n\nJudul: "+note.judul+
-  "\n\nIsi:\n"+note.isi+
-  "\n\nTekan OK untuk Edit/Hapus"
-  );
-
-  if(action){
-    const pass=prompt("Masukkan password:");
-    if(pass!==PASSWORD) return alert("Password salah!");
-
-    const pilih=prompt("Ketik: edit / hapus");
-    if(pilih==="hapus"){
-      deleteDoc(doc(db,"notes",id));
-      loadNotes();
-    }else if(pilih==="edit"){
-      editingId=id;
-      document.getElementById("judul").value=note.judul;
-      document.getElementById("isi").value=note.isi;
-      document.getElementById("level").value=note.level;
-      document.getElementById("modalTitle").innerText="Edit Catatan";
-      document.getElementById("modal").style.display="flex";
-    }
-  }
+  currentId=id;
+  document.getElementById("detailTitle").innerText=note.judul;
+  document.getElementById("detailDate").innerText=note.date;
+  document.getElementById("detailIsi").innerText=note.isi;
+  document.getElementById("detailCard").style.background=colors[note.level];
+  document.getElementById("detailModal").style.display="flex";
 });
 
 bubbles.push(bubble);
+}
+
+window.closeDetail=()=>{
+  document.getElementById("detailModal").style.display="none";
+}
+
+/* EDIT */
+window.editNote=()=>{
+  const pass=prompt("Masukkan password:");
+  if(pass!==PASSWORD) return alert("Password salah!");
+  editing=true;
+  document.getElementById("formTitle").innerText="Edit Catatan";
+  document.getElementById("formModal").style.display="flex";
+  closeDetail();
+}
+
+/* DELETE */
+window.deleteNote=async()=>{
+  const pass=prompt("Masukkan password:");
+  if(pass!==PASSWORD) return alert("Password salah!");
+  await deleteDoc(doc(db,"notes",currentId));
+  closeDetail();
+  loadNotes();
 }
 
 /* PHYSICS */
