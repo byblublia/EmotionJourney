@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { 
-  getFirestore, collection, addDoc, getDocs, deleteDoc, 
-  doc, query, where 
+  getFirestore, collection, addDoc, getDocs, 
+  deleteDoc, doc, updateDoc 
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -16,86 +16,45 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const ADMIN_USERNAME = "mylovelybee";
 const ADMIN_PASSWORD = "byblublia372";
 
-let currentUser = null;
-let currentRole = null;
-let selectedId = null;
 let bubbles = [];
+let selectedId = null;
 
 const colors={
-1:"#C8F7DC",
-2:"#A8D8FF",
-3:"#FFF3B0",
-4:"#FFCC9A",
-5:"#FF9E9E",
-6:"#C3A6FF"
+1:"#C8F7DCcc",
+2:"#A8D8FFcc",
+3:"#FFF3B0cc",
+4:"#FFCC9Acc",
+5:"#FF9E9Ecc",
+6:"#C3A6FFcc"
 };
 
 //////////////////////////////
-// 🔐 OPEN LOGIN
+// 🔘 MENU TOGGLE
 //////////////////////////////
-window.openLogin = function(){
-document.getElementById("loginModal").style.display="flex";
+window.toggleMenu = function(){
+const menu=document.getElementById("menuBox");
+menu.style.display = menu.style.display==="flex"?"none":"flex";
 };
 
 //////////////////////////////
-// 🔐 LOGIN SYSTEM
+// 🔐 PASSWORD CHECK
 //////////////////////////////
-window.login = async function(){
-
-const username = document.getElementById("username").value;
-const password = document.getElementById("password").value;
-
-// ADMIN
-if(username===ADMIN_USERNAME && password===ADMIN_PASSWORD){
-currentUser=username;
-currentRole="admin";
-alert("Login sebagai Admin 👑");
+function checkPassword(){
+const pass=prompt("Masukkan password:");
+if(pass!==ADMIN_PASSWORD){
+alert("Password salah!");
+return false;
 }
-else{
-// USER
-const q=query(collection(db,"users"),
-where("username","==",username),
-where("password","==",password)
-);
-const snap=await getDocs(q);
-
-if(snap.empty){
-alert("Username atau password salah!");
-return;
-}
-
-currentUser=username;
-currentRole="user";
-alert("Login sebagai User ✨");
-}
-
-document.getElementById("loginModal").style.display="none";
-updateMenu();
-loadNotes();
-};
-
-//////////////////////////////
-// 🧭 UPDATE MENU
-//////////////////////////////
-function updateMenu(){
-const menu=document.getElementById("menuLeft");
-
-if(currentRole==="admin"){
-menu.innerHTML=`<button onclick="openForm()">Tambah Catatan</button>`;
-}
-else if(currentRole==="user"){
-menu.innerHTML=`<button onclick="openForm()">Tambah Catatan</button>`;
-}
+return true;
 }
 
 //////////////////////////////
-// 📝 FORM
+// 📝 OPEN FORM
 //////////////////////////////
 window.openForm=function(){
-if(!currentUser) return alert("Login dulu!");
+if(!checkPassword()) return;
 document.getElementById("formModal").style.display="flex";
 };
 
@@ -107,7 +66,6 @@ window.saveNote=async function(){
 
 const note={
 tanggal:document.getElementById("tanggal").value,
-username:currentUser,
 judul:document.getElementById("judul").value,
 isi:document.getElementById("isi").value,
 level:parseInt(document.getElementById("level").value),
@@ -122,28 +80,41 @@ loadNotes();
 };
 
 //////////////////////////////
-// 📦 LOAD NOTES (AUTO SAAT WEB DIBUKA)
+// ✏ EDIT NOTE
+//////////////////////////////
+window.editNote=async function(){
+if(!checkPassword()) return;
+
+if(!selectedId){
+alert("Klik bubble dulu untuk memilih catatan.");
+return;
+}
+
+document.getElementById("editModal").style.display="flex";
+};
+
+window.updateNote=async function(){
+
+await updateDoc(doc(db,"notes",selectedId),{
+judul:document.getElementById("eJudul").value,
+isi:document.getElementById("eIsi").value,
+level:parseInt(document.getElementById("eLevel").value),
+kategori:document.getElementById("eKategori").value
+});
+
+document.getElementById("editModal").style.display="none";
+loadNotes();
+};
+
+//////////////////////////////
+// 📦 LOAD NOTES
 //////////////////////////////
 async function loadNotes(){
 
 bubbles.forEach(b=>b.el.remove());
 bubbles=[];
 
-let q;
-
-if(currentRole==="admin"){
-q=collection(db,"notes");
-}
-else if(currentRole==="user"){
-q=query(collection(db,"notes"),
-where("username","==",currentUser));
-}
-else{
-// BELUM LOGIN → TAMPILKAN SEMUA CATATAN
-q=collection(db,"notes");
-}
-
-const snap=await getDocs(q);
+const snap=await getDocs(collection(db,"notes"));
 
 snap.forEach(docSnap=>{
 createBubble(docSnap.data(),docSnap.id);
@@ -179,9 +150,16 @@ el.style.top=bubble.y+"px";
 
 el.onclick=function(){
 selectedId=id;
+
+// isi form edit otomatis
+document.getElementById("eJudul").value=note.judul;
+document.getElementById("eIsi").value=note.isi;
+document.getElementById("eLevel").value=note.level;
+document.getElementById("eKategori").value=note.kategori;
+
+// tampil detail
 document.getElementById("dJudul").innerText=note.judul;
 document.getElementById("dTanggal").innerText=note.tanggal;
-document.getElementById("dUser").innerText="By: "+note.username;
 document.getElementById("dKategori").innerText=note.kategori;
 document.getElementById("dIsi").innerText=note.isi;
 document.getElementById("detailCard").style.background=colors[note.level];
@@ -190,20 +168,6 @@ document.getElementById("detailModal").style.display="flex";
 
 bubbles.push(bubble);
 }
-
-//////////////////////////////
-// ❌ DELETE (ADMIN ONLY)
-//////////////////////////////
-window.deleteNote=async function(){
-if(currentRole!=="admin") return alert("Hanya admin yang bisa hapus!");
-await deleteDoc(doc(db,"notes",selectedId));
-closeDetail();
-loadNotes();
-};
-
-window.closeDetail=function(){
-document.getElementById("detailModal").style.display="none";
-};
 
 //////////////////////////////
 // 🎯 ANIMATION
@@ -234,6 +198,5 @@ b.el.style.top=b.y+"px";
 requestAnimationFrame(animate);
 }
 
-// 🔥 LOAD SAAT PERTAMA BUKA WEB
 loadNotes();
 animate();
