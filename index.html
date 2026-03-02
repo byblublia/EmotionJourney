@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Peta Emosi Yulia</title>
+<title>MY FEELING</title>
 
 <style>
 body{
@@ -13,31 +13,28 @@ body{
   background:linear-gradient(135deg,#dbeafe,#fce7f3);
 }
 
-/* Header */
 .header{
   position:fixed;
   top:20px;
   left:50%;
   transform:translateX(-50%);
-  background:white;
-  padding:12px 25px;
-  border-radius:40px;
-  box-shadow:0 10px 25px rgba(0,0,0,0.15);
-  display:flex;
-  align-items:center;
-  gap:15px;
+  text-align:center;
   z-index:10;
 }
 
-.header h2{
+.header h1{
   margin:0;
-  font-size:16px;
-  font-weight:600;
+  font-size:28px;
+  letter-spacing:2px;
+}
+
+.header button{
+  margin-top:10px;
 }
 
 button{
   border:none;
-  padding:8px 18px;
+  padding:8px 20px;
   border-radius:25px;
   cursor:pointer;
   background:#6366f1;
@@ -51,7 +48,6 @@ button:hover{
   transform:scale(1.05);
 }
 
-/* Bubble */
 .bubble{
   position:absolute;
   border-radius:50%;
@@ -65,14 +61,9 @@ button:hover{
   font-size:12px;
   box-shadow:0 15px 30px rgba(0,0,0,0.25);
   backdrop-filter:blur(8px);
-  transition:transform 0.2s;
+  cursor:pointer;
 }
 
-.bubble:hover{
-  transform:scale(1.12);
-}
-
-/* Modal */
 .modal{
   position:fixed;
   inset:0;
@@ -87,7 +78,7 @@ button:hover{
   background:white;
   padding:25px;
   border-radius:20px;
-  width:320px;
+  width:340px;
   box-shadow:0 15px 40px rgba(0,0,0,0.3);
 }
 
@@ -104,19 +95,19 @@ input,textarea,select{
 <body>
 
 <div class="header">
-  <h2>Peta Emosi</h2>
+  <h1>MY FEELING</h1>
   <button onclick="openAdd()">Tambah Catatan</button>
 </div>
 
 <div class="modal" id="modal">
   <div class="modal-content">
-    <h3>Tambah Catatan</h3>
+    <h3 id="modalTitle">Tambah Catatan</h3>
     <input id="judul" placeholder="Judul">
     <textarea id="isi" placeholder="Isi"></textarea>
     <select id="level">
-      <option value="1">Emosi Internal</option>
-      <option value="2">Lelah & Stres</option>
-      <option value="3">Emosi Sosial</option>
+      <option value="1">Ringan</option>
+      <option value="2">Sedang</option>
+      <option value="3">Berat</option>
       <option value="4">Sangat Berat</option>
     </select>
     <button onclick="saveNote()">Simpan</button>
@@ -127,14 +118,13 @@ input,textarea,select{
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } 
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* 🔐 PASSWORD */
 const PASSWORD="deadline";
 
-/* 🔥 FIREBASE CONFIG */
 const firebaseConfig = {
-  apiKey: "AIzaSyBxRNXTauqOB3X0FptQPeR7jkBy0gKUS3E",
+  apiKey: "YOUR_API_KEY",
   authDomain: "emotion-74f3c.firebaseapp.com",
   projectId: "emotion-74f3c",
   storageBucket: "emotion-74f3c.firebasestorage.app",
@@ -153,14 +143,14 @@ const colors={
 };
 
 let bubbles=[];
+let editingId=null;
 
-/* 🔐 PASSWORD CHECK */
+/* PASSWORD ADD */
 window.openAdd=()=>{
   const input=prompt("Masukkan password:");
-  if(input!==PASSWORD){
-    alert("Password salah!");
-    return;
-  }
+  if(input!==PASSWORD) return alert("Password salah!");
+  editingId=null;
+  document.getElementById("modalTitle").innerText="Tambah Catatan";
   document.getElementById("modal").style.display="flex";
 }
 
@@ -168,7 +158,7 @@ window.closeModal=()=>{
   document.getElementById("modal").style.display="none";
 }
 
-/* 💾 SAVE */
+/* SAVE */
 window.saveNote=async()=>{
 const judul=document.getElementById("judul").value;
 const isi=document.getElementById("isi").value;
@@ -176,53 +166,83 @@ const level=parseInt(document.getElementById("level").value);
 
 if(!judul||!isi) return alert("Lengkapi data");
 
-await addDoc(collection(db,"notes"),{
-judul,isi,level,
-date:new Date().toLocaleDateString("id-ID"),
-timestamp:Date.now()
-});
+if(editingId){
+  await updateDoc(doc(db,"notes",editingId),{judul,isi,level});
+}else{
+  await addDoc(collection(db,"notes"),{
+    judul,isi,level,
+    date:new Date().toLocaleDateString("id-ID")
+  });
+}
 
 closeModal();
 loadNotes();
 };
 
-/* 📥 LOAD */
+/* LOAD */
 async function loadNotes(){
 bubbles.forEach(b=>b.el.remove());
 bubbles=[];
 
 const snap=await getDocs(collection(db,"notes"));
-snap.forEach(doc=>createBubble(doc.data()));
+snap.forEach(d=>createBubble(d.data(),d.id));
 }
 
-/* 🫧 CREATE BUBBLE */
-function createBubble(note){
+/* CREATE BUBBLE */
+function createBubble(note,id){
 const size=100+note.level*15;
 const el=document.createElement("div");
 el.className="bubble";
 el.style.width=size+"px";
 el.style.height=size+"px";
 el.style.background=colors[note.level];
-el.innerHTML=`<div>${note.date}<br><b>${note.judul}</b></div>`;
-
+el.innerHTML=`<div><b>${note.judul}</b></div>`;
 document.body.appendChild(el);
 
 const bubble={
-el,
+el,id,note,
 x:Math.random()*(innerWidth-size),
 y:Math.random()*(innerHeight-size),
-dx:(Math.random()*2+1)*(Math.random()>0.5?1:-1),
-dy:(Math.random()*2+1)*(Math.random()>0.5?1:-1),
+dx:(Math.random()*3+1)*(Math.random()>0.5?1:-1),
+dy:(Math.random()*3+1)*(Math.random()>0.5?1:-1),
 size
 };
 
 el.style.left=bubble.x+"px";
 el.style.top=bubble.y+"px";
 
+/* CLICK */
+el.addEventListener("click",()=>{
+  const action=confirm(
+  "Tanggal: "+note.date+
+  "\n\nJudul: "+note.judul+
+  "\n\nIsi:\n"+note.isi+
+  "\n\nTekan OK untuk Edit/Hapus"
+  );
+
+  if(action){
+    const pass=prompt("Masukkan password:");
+    if(pass!==PASSWORD) return alert("Password salah!");
+
+    const pilih=prompt("Ketik: edit / hapus");
+    if(pilih==="hapus"){
+      deleteDoc(doc(db,"notes",id));
+      loadNotes();
+    }else if(pilih==="edit"){
+      editingId=id;
+      document.getElementById("judul").value=note.judul;
+      document.getElementById("isi").value=note.isi;
+      document.getElementById("level").value=note.level;
+      document.getElementById("modalTitle").innerText="Edit Catatan";
+      document.getElementById("modal").style.display="flex";
+    }
+  }
+});
+
 bubbles.push(bubble);
 }
 
-/* 💥 PHYSICS + COLLISION */
+/* PHYSICS */
 function animate(){
 for(let i=0;i<bubbles.length;i++){
 let b=bubbles[i];
@@ -237,7 +257,6 @@ let b2=bubbles[j];
 let dx=b.x-b2.x;
 let dy=b.y-b2.y;
 let distance=Math.sqrt(dx*dx+dy*dy);
-
 if(distance<b.size/2+b2.size/2){
 [b.dx,b2.dx]=[b2.dx,b.dx];
 [b.dy,b2.dy]=[b2.dy,b.dy];
@@ -254,6 +273,5 @@ loadNotes();
 animate();
 
 </script>
-
 </body>
 </html>
