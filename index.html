@@ -1,43 +1,127 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Peta Emosi Online</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peta Emosi Yulia</title>
+
 <style>
-body{font-family:sans-serif;margin:0;overflow:hidden;background:#f4f4f4}
-button{padding:8px 12px;margin:5px;border-radius:8px;border:none;cursor:pointer}
+body{
+  margin:0;
+  overflow:hidden;
+  font-family:'Segoe UI',sans-serif;
+  background:linear-gradient(135deg,#dbeafe,#fce7f3);
+}
+
+/* Header */
+.header{
+  position:fixed;
+  top:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:white;
+  padding:12px 25px;
+  border-radius:40px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.15);
+  display:flex;
+  align-items:center;
+  gap:15px;
+  z-index:10;
+}
+
+.header h2{
+  margin:0;
+  font-size:16px;
+  font-weight:600;
+}
+
+button{
+  border:none;
+  padding:8px 18px;
+  border-radius:25px;
+  cursor:pointer;
+  background:#6366f1;
+  color:white;
+  font-size:13px;
+  transition:0.3s;
+}
+
+button:hover{
+  background:#4f46e5;
+  transform:scale(1.05);
+}
+
+/* Bubble */
 .bubble{
-position:absolute;
-border-radius:50%;
-color:white;
-display:flex;
-justify-content:center;
-align-items:center;
-text-align:center;
-padding:15px;
-box-shadow:0 8px 20px rgba(0,0,0,0.2);
-font-size:12px;
+  position:absolute;
+  border-radius:50%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  padding:15px;
+  box-sizing:border-box;
+  color:white;
+  font-size:12px;
+  box-shadow:0 15px 30px rgba(0,0,0,0.25);
+  backdrop-filter:blur(8px);
+  transition:transform 0.2s;
+}
+
+.bubble:hover{
+  transform:scale(1.12);
+}
+
+/* Modal */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.4);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:20;
+}
+
+.modal-content{
+  background:white;
+  padding:25px;
+  border-radius:20px;
+  width:320px;
+  box-shadow:0 15px 40px rgba(0,0,0,0.3);
+}
+
+input,textarea,select{
+  width:100%;
+  margin-bottom:12px;
+  padding:10px;
+  border-radius:12px;
+  border:1px solid #ddd;
+  font-size:13px;
 }
 </style>
 </head>
 <body>
 
-<button onclick="openAdd()">Tambah Catatan</button>
-
-<div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;">
-<div style="background:white;padding:20px;border-radius:12px;width:300px;">
-<h3>Tambah Catatan</h3>
-<input id="judul" placeholder="Judul"><br><br>
-<textarea id="isi" placeholder="Isi"></textarea><br><br>
-<select id="level">
-<option value="1">Emosi Internal</option>
-<option value="2">Lelah & Stres</option>
-<option value="3">Emosi Sosial</option>
-<option value="4">Sangat Berat</option>
-</select><br><br>
-<button onclick="saveNote()">Simpan</button>
-<button onclick="closeModal()">Batal</button>
+<div class="header">
+  <h2>Peta Emosi</h2>
+  <button onclick="openAdd()">Tambah Catatan</button>
 </div>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <h3>Tambah Catatan</h3>
+    <input id="judul" placeholder="Judul">
+    <textarea id="isi" placeholder="Isi"></textarea>
+    <select id="level">
+      <option value="1">Emosi Internal</option>
+      <option value="2">Lelah & Stres</option>
+      <option value="3">Emosi Sosial</option>
+      <option value="4">Sangat Berat</option>
+    </select>
+    <button onclick="saveNote()">Simpan</button>
+    <button onclick="closeModal()">Batal</button>
+  </div>
 </div>
 
 <script type="module">
@@ -45,91 +129,129 @@ font-size:12px;
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* 🔥 CONFIG FIREBASE YULIA */
+/* 🔐 PASSWORD */
+const PASSWORD="deadline";
+
+/* 🔥 FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyBxRNXTauqOB3X0FptQPeR7jkBy0gKUS3E",
   authDomain: "emotion-74f3c.firebaseapp.com",
   projectId: "emotion-74f3c",
   storageBucket: "emotion-74f3c.firebasestorage.app",
   messagingSenderId: "740825781548",
-  appId: "1:740825781548:web:90d4e448d440a953440889",
-  measurementId: "G-91KPTREBDS"
+  appId: "1:740825781548:web:90d4e448d440a953440889"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const emotionColors = {
-1:"#4cc9f0",
-2:"#80ed99",
-3:"#f9c74f",
-4:"#f94144"
+const colors={
+1:"linear-gradient(135deg,#60a5fa,#3b82f6)",
+2:"linear-gradient(135deg,#34d399,#10b981)",
+3:"linear-gradient(135deg,#fbbf24,#f59e0b)",
+4:"linear-gradient(135deg,#f87171,#ef4444)"
 };
 
 let bubbles=[];
 
-/* Modal */
-window.openAdd=function(){
-document.getElementById("modal").style.display="flex";
+/* 🔐 PASSWORD CHECK */
+window.openAdd=()=>{
+  const input=prompt("Masukkan password:");
+  if(input!==PASSWORD){
+    alert("Password salah!");
+    return;
+  }
+  document.getElementById("modal").style.display="flex";
 }
 
-window.closeModal=function(){
-document.getElementById("modal").style.display="none";
+window.closeModal=()=>{
+  document.getElementById("modal").style.display="none";
 }
 
-/* Simpan ke Firestore */
-window.saveNote=async function(){
+/* 💾 SAVE */
+window.saveNote=async()=>{
 const judul=document.getElementById("judul").value;
 const isi=document.getElementById("isi").value;
 const level=parseInt(document.getElementById("level").value);
 
-if(!judul||!isi)return alert("Lengkapi data");
+if(!judul||!isi) return alert("Lengkapi data");
 
 await addDoc(collection(db,"notes"),{
-judul,
-isi,
-level,
+judul,isi,level,
 date:new Date().toLocaleDateString("id-ID"),
 timestamp:Date.now()
 });
 
 closeModal();
 loadNotes();
-}
+};
 
-/* Ambil dari Firestore */
+/* 📥 LOAD */
 async function loadNotes(){
-bubbles.forEach(b=>b.remove());
+bubbles.forEach(b=>b.el.remove());
 bubbles=[];
 
-const querySnapshot=await getDocs(collection(db,"notes"));
-
-querySnapshot.forEach((doc)=>{
-const note=doc.data();
-createBubble(note);
-});
+const snap=await getDocs(collection(db,"notes"));
+snap.forEach(doc=>createBubble(doc.data()));
 }
 
-/* Bubble */
+/* 🫧 CREATE BUBBLE */
 function createBubble(note){
-const bubble=document.createElement("div");
-bubble.className="bubble";
-bubble.style.background=emotionColors[note.level];
-
 const size=100+note.level*15;
-bubble.style.width=size+"px";
-bubble.style.height=size+"px";
+const el=document.createElement("div");
+el.className="bubble";
+el.style.width=size+"px";
+el.style.height=size+"px";
+el.style.background=colors[note.level];
+el.innerHTML=`<div>${note.date}<br><b>${note.judul}</b></div>`;
 
-bubble.innerHTML=`<div>${note.date}<br><b>${note.judul}</b></div>`;
+document.body.appendChild(el);
 
-bubble.style.left=Math.random()*(window.innerWidth-size)+"px";
-bubble.style.top=Math.random()*(window.innerHeight-size)+"px";
+const bubble={
+el,
+x:Math.random()*(innerWidth-size),
+y:Math.random()*(innerHeight-size),
+dx:(Math.random()*2+1)*(Math.random()>0.5?1:-1),
+dy:(Math.random()*2+1)*(Math.random()>0.5?1:-1),
+size
+};
 
-document.body.appendChild(bubble);
+el.style.left=bubble.x+"px";
+el.style.top=bubble.y+"px";
+
 bubbles.push(bubble);
 }
 
+/* 💥 PHYSICS + COLLISION */
+function animate(){
+for(let i=0;i<bubbles.length;i++){
+let b=bubbles[i];
+b.x+=b.dx;
+b.y+=b.dy;
+
+if(b.x<=0||b.x+b.size>=innerWidth) b.dx*=-1;
+if(b.y<=0||b.y+b.size>=innerHeight) b.dy*=-1;
+
+for(let j=i+1;j<bubbles.length;j++){
+let b2=bubbles[j];
+let dx=b.x-b2.x;
+let dy=b.y-b2.y;
+let distance=Math.sqrt(dx*dx+dy*dy);
+
+if(distance<b.size/2+b2.size/2){
+[b.dx,b2.dx]=[b2.dx,b.dx];
+[b.dy,b2.dy]=[b2.dy,b.dy];
+}
+}
+
+b.el.style.left=b.x+"px";
+b.el.style.top=b.y+"px";
+}
+requestAnimationFrame(animate);
+}
+
 loadNotes();
+animate();
 
 </script>
 
