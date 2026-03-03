@@ -178,7 +178,7 @@ input,textarea,select{
 <button onclick="closeForm()">Batal</button>
 </div>
 </div>
-<button id="menubutton" onclick="openMenu()">☰ MENU</button>
+<button id="menubtn" onclick="toogleMenu()">☰ MENU</button>
 
 
 <!-- MODAL DETAIL CATATAN -->
@@ -227,9 +227,16 @@ let currentId=null;
 let editing=false;
 
 /* ======= MENU ======= */
-window.openMenu=()=>{
-  const pass=prompt("Masukkan password:");
-  if(pass!==PASSWORD) return alert("Password salah!");
+let bubbles=[];
+let selectedId=null;
+
+window.toggleMenu=()=>menuBox.style.display=
+menuBox.style.display==="flex"?"none":"flex";
+  
+function checkPass(){
+let p=prompt("Masukkan password:");
+return p===PASSWORD;
+}
   editing=false;
   document.getElementById("formTitle").innerText="Tambah Catatan";
   document.getElementById("formCard").style.background="white";
@@ -372,6 +379,7 @@ animate();
 
 </body>
 </html>
+
 
 
 
