@@ -134,32 +134,41 @@ input,textarea,select{
   <h1>EMOTION JOURNEY</h1>
 </div>
 
-<button class="menuButton" onclick="openMenu()">Menu</button>
+  <button id="menuBtn" onclick="toggleMenu()">☰ MENU</button>
 
-<!-- MODAL TAMBAH / EDIT CATATAN -->
+<div id="menuBox">
+<button onclick="openForm()">Tambah Catatan</button>
+<button onclick="enterEditMode()">Edit / Hapus Catatan</button>
+</div>
+
+<!-- TAMBAH -->
 <div class="modal" id="formModal">
   <div class="modalCard" id="formCard" style="background:white;color:black;">
     <h3 id="formTitle">Tambah Catatan</h3>
     <input id="judul" placeholder="Judul">
-    <textarea id="isi" placeholder="Isi catatan"></textarea>
-    <select id="level">
-      <option value="1">Peaceful</option>
-      <option value="2">Happy</option>
-      <option value="3">Unsettled</option>
-      <option value="4">Sad</option>
-      <option value="5">Stressed</option>
-      <option value="6">Breakdown</option>
-    </select>
-    <select id="category">
-      <option value="💖 Love">💖 Love</option>
-      <option value="👨👩👧 Family">👨👩👧 Family</option>
-      <option value="🌱 Self">🌱 Self</option>
-      <option value="🌍 Life">🌍 Life</option>
-    </select>
-    <button onclick="saveNote()">Simpan</button>
-    <button onclick="closeForm()">Batal</button>
-  </div>
+
+<select id="level">
+<option value="1">Level 1 – Peaceful | Tenang, stabil, damai</option>
+<option value="2">Level 2 – Happy | Bahagia, nyaman, merasa dicintai</option>
+<option value="3">Level 3 – Unsettled | Khawatir ringan, sedikit gelisah</option>
+<option value="4">Level 4 – Sad | Sedih, kecewa, lelah emosional</option>
+<option value="5">Level 5 – Stressed | Marah, tertekan, overwhelmed</option>
+<option value="6">Level 6 – Breakdown | Sangat hancur, panik berat</option>
+</select>
+
+<select id="kategori">
+<option value="Love">💖 Love</option>
+<option value="Family">👨‍👩‍👧 Family</option>
+<option value="Self">🌱 Self</option>
+<option value="Life">🌍 Life</option>
+</select>
+
+<button onclick="saveNote()">Simpan</button>
+<button onclick="closeForm()">Batal</button>
 </div>
+</div>
+<button class="menuButton" onclick="openMenu()">Menu</button>
+
 
 <!-- MODAL DETAIL CATATAN -->
 <div class="modal" id="detailModal">
@@ -352,3 +361,4 @@ animate();
 
 </body>
 </html>
+
