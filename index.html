@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Feeling</title>
+<title>Emotion Journey</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
@@ -21,15 +21,20 @@ animation:gradientMove 12s infinite alternate;
 100%{background-position:right;}
 }
 
-h1{
-position:absolute;
-top:20px;
-left:50%;
-transform:translateX(-50%);
-font-size:42px;
-color:white;
-text-shadow:0 4px 12px rgba(0,0,0,0.2);
-letter-spacing:2px;
+.header{
+  position:absolute;
+  top:20px;
+  width:100%;
+  text-align:center;
+  z-index:10;
+}
+.header h1{
+  font-size:60px;
+  font-weight:800;
+  color:white;
+  text-shadow:0 10px 30px rgba(0,0,0,0.3);
+  letter-spacing:5px;
+  animation:fadeTitle 1s ease;
 }
 
 #menuBtn{
@@ -124,7 +129,7 @@ cursor:pointer;
 
 <body>
 
-<h1>My Feeling</h1>
+<h1>EMOTION JOURNEY</h1>
 
 <button id="menuBtn" onclick="toggleMenu()">☰ MENU</button>
 
@@ -340,3 +345,4 @@ animate();
 
 </body>
 </html>
+
